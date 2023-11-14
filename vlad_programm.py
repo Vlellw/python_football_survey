@@ -1,8 +1,11 @@
 import sqlite3
 
+
+from PyQt5.QtWidgets import QDialog, QVBoxLayout, QLabel, QLineEdit, QPushButton, QMessageBox
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtWidgets import QWidget, QVBoxLayout
 from PyQt5.QtGui import QPixmap
+from PyQt5.QtWidgets import QWidget, QPushButton
+from PyQt5.QtWidgets import QLabel, QLineEdit
 
 st1 = "What is your strongest quality?"
 st2 = 'Which leg do you use better?'
@@ -41,7 +44,6 @@ m1 = ''
 m2 = ''
 con = sqlite3.connect("Quize1_bd.sqlite")
 cur = con.cursor()
-idd = 1
 result = cur.execute("""SELECT qualities FROM players""").fetchall()
 for i in result:
     for z in i:
@@ -58,13 +60,7 @@ con.close()
 kol = 0
 for i in q2:
     q1[i] = w2[kol]
-    kol += 1
-kol = 0
-for i in q2:
     q3[i] = w3[kol]
-    kol += 1
-kol = 0
-for i in q2:
     q4[i] = w4[kol]
     kol += 1
 kol = 0
@@ -437,6 +433,11 @@ class Ui_Window_back1(object):
         self.radioButton_29.setFont(font)
         self.buttonGroup_7.addButton(self.radioButton_29)
 
+        self.w = QWidget()
+        self.layout = QVBoxLayout()
+        self.w.setLayout(self.layout)
+        self.pixmap = QPixmap()
+
         Window_back1.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(Window_back1)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 22))
@@ -447,13 +448,9 @@ class Ui_Window_back1(object):
         Window_back1.setStatusBar(self.statusbar)
 
         self.retranslateUi(Window_back1)
-        self.pushButton.clicked.connect(self.first_question)
+        self.pushButton.clicked.connect(self.show_dialog)
         QtCore.QMetaObject.connectSlotsByName(Window_back1)
 
-        self.w = QWidget()
-        self.layout = QVBoxLayout()
-        self.w.setLayout(self.layout)
-        self.pixmap = QPixmap()
 
     def retranslateUi(self, Window_back1):
         _translate = QtCore.QCoreApplication.translate
@@ -499,6 +496,55 @@ class Ui_Window_back1(object):
         self.radioButton_27.setText(_translate("Window_back1", "do the assist"))
         self.radioButton_28.setText(_translate("Window_back1", "don't miss a goal"))
         self.radioButton_29.setText(_translate("Window_back1", "the most important is the victory"))
+
+    def show_dialog(self):
+        # Создание диалогового окна
+        dialog = QDialog()
+        dialog.setWindowTitle("Диалоговое окно")
+
+        # Создание полей ввода для логина и пароля
+        login_label = QLabel("Логин:")
+        password_label = QLabel("Пароль:")
+        login_edit = QLineEdit()
+        password_edit = QLineEdit()
+        password_edit.setEchoMode(QLineEdit.Password)
+
+        # Создание кнопок "Зарегистрировать" и "Отменить"
+        register_button = QPushButton("Зарегистрировать")
+        cancel_button = QPushButton("Отменить")
+
+        # Определение слотов для кнопок
+        register_button.clicked.connect(dialog.accept)
+        cancel_button.clicked.connect(dialog.reject)
+
+        # Размещение элементов в виджете
+        layout = QVBoxLayout()
+        layout.addWidget(login_label)
+        layout.addWidget(login_edit)
+        layout.addWidget(password_label)
+        layout.addWidget(password_edit)
+        layout.addWidget(register_button)
+        layout.addWidget(cancel_button)
+
+        # Установка размещения для диалогового окна
+        dialog.setLayout(layout)
+
+        # Отображение диалогового окна
+        result = dialog.exec_()
+
+        # Обработка результатов
+        if result == QDialog.Accepted:
+            login = login_edit.text()
+            password = password_edit.text()
+            con = sqlite3.connect("Quize1_bd.sqlite")
+            cur = con.cursor()
+            cur.execute(f"""INSERT INTO registration 
+                                (logins, passwords) 
+                                VALUES 
+                                ('{login}', '{password}');""")
+            con.commit()
+            cur.close()
+            self.first_question()
 
     def first_question(self):
         self.radioButton.setEnabled(True)
