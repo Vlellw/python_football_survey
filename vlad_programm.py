@@ -499,52 +499,75 @@ class Ui_Window_back1(object):
 
     def show_dialog(self):
         # Создание диалогового окна
-        dialog = QDialog()
-        dialog.setWindowTitle("Диалоговое окно")
+        self.dialog = QDialog()
+        self.dialog.setWindowTitle("Диалоговое окно")
+        self.dialog.setGeometry(1000, 400, 200, 200)
+        self.kol = 0
 
         # Создание полей ввода для логина и пароля
-        login_label = QLabel("Логин:")
-        password_label = QLabel("Пароль:")
-        login_edit = QLineEdit()
-        password_edit = QLineEdit()
-        password_edit.setEchoMode(QLineEdit.Password)
+        self.login_label = QLabel("Логин:")
+        self.password_label = QLabel("Пароль:")
+        self.error_label = QLabel()
+        self.login_edit = QLineEdit()
+        self.password_edit = QLineEdit()
+        self.password_edit.setEchoMode(QLineEdit.Password)
 
-        # Создание кнопок "Зарегистрировать" и "Отменить"
-        register_button = QPushButton("Зарегистрировать")
-        cancel_button = QPushButton("Отменить")
+        # Создание кнопок "Зарегистрировать", "Отменить" и "Войти"
+        self.register_button = QPushButton("Зарегистрировать")
+        self.cancel_button = QPushButton("Отменить")
+        self.enter_button = QPushButton("Войти")
 
         # Определение слотов для кнопок
-        register_button.clicked.connect(dialog.accept)
-        cancel_button.clicked.connect(dialog.reject)
+        self.register_button.clicked.connect(self.registration_cheking)
+        self.cancel_button.clicked.connect(self.dialog.reject)
+        self.enter_button.clicked.connect(self.enter_cheking)
 
         # Размещение элементов в виджете
         layout = QVBoxLayout()
-        layout.addWidget(login_label)
-        layout.addWidget(login_edit)
-        layout.addWidget(password_label)
-        layout.addWidget(password_edit)
-        layout.addWidget(register_button)
-        layout.addWidget(cancel_button)
+        layout.addWidget(self.error_label)
+        layout.addWidget(self.login_label)
+        layout.addWidget(self.login_edit)
+        layout.addWidget(self.password_label)
+        layout.addWidget(self.password_edit)
+        layout.addWidget(self.enter_button)
+        layout.addWidget(self.cancel_button)
+        layout.addWidget(self.register_button)
 
         # Установка размещения для диалогового окна
-        dialog.setLayout(layout)
+        self.dialog.setLayout(layout)
 
         # Отображение диалогового окна
-        result = dialog.exec_()
+        result = self.dialog.exec_()
 
-        # Обработка результатов
-        if result == QDialog.Accepted:
-            login = login_edit.text()
-            password = password_edit.text()
-            con = sqlite3.connect("Quize1_bd.sqlite")
-            cur = con.cursor()
-            cur.execute(f"""INSERT INTO registration 
-                                (logins, passwords) 
-                                VALUES 
-                                ('{login}', '{password}');""")
-            con.commit()
-            cur.close()
-            self.first_question()
+    def registration_cheking(self):
+        self.login = self.login_edit.text()
+        self.password = self.password_edit.text()
+        con = sqlite3.connect("Quize1_bd.sqlite")
+        cur = con.cursor()
+        cur.execute(f"""INSERT INTO registration 
+                                        (logins, passwords) 
+                                        VALUES 
+                                        ('{self.login}', '{self.password}');""")
+        con.commit()
+        cur.close()
+        self.dialog.accept()
+        self.first_question()
+
+    def enter_cheking(self):
+        login = self.login_edit.text()
+        password = self.password_edit.text()
+        con = sqlite3.connect("Quize1_bd.sqlite")
+        cur = con.cursor()
+        result = cur.execute(f"""SELECT * FROM registration""")
+        for i in result:
+            if login in i and password in i:
+                self.dialog.accept()
+                self.first_question()
+            else:
+                self.error_label.setText('Ошибка')
+
+        con.commit()
+        cur.close()
 
     def first_question(self):
         self.radioButton.setEnabled(True)
